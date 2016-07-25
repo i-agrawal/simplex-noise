@@ -1,4 +1,4 @@
-#include "noise.h"
+#include "simplex.h"
 #include <time.h>
 #include <cmath>
 #include <stdio.h>
@@ -9,13 +9,13 @@ int main(int argc, char ** argv) {
 	double t;
 	printf("Creating New 2D Simplex Noise Generator\n");
 	t = clock();
-	noise * newgen = new noise(dim);
+	simplex * newgen = new simplex(dim);
 	t = clock() - t;
 	printf("Time Elapsed | %f sec (clock creation = 1e-6 sec)\n\n", t / CLOCKS_PER_SEC);
 
 	printf("Loading 2D Simplex Noise Generator From File\n");
 	t = clock();
-	noise * loadgen = new noise(dim, "perm.txt");
+	simplex * loadgen = new simplex(dim, "perm.txt");
 	t = clock() - t;
 	printf("Time Elapsed | %f sec (clock creation = 1e-6 sec)\n\n", t / CLOCKS_PER_SEC);
 
@@ -25,9 +25,9 @@ int main(int argc, char ** argv) {
 	double * point = (double *)malloc(dim * sizeof(double));
 	point[0] = 30.0 / w - 0.5;
 	point[1] = 50.0 / h - 0.5;
-	printf("Performing Noise Function On Point 30, 50 in a %4.f x %4.f map\n", w, h);
+	printf("Performing Noise Function On Point 30, 50 in a %g x %g map\n", w, h);
 	t = clock();
-	val = loadgen->simplexnoise(point);
+	val = loadgen->noise(point);
 	t = clock() - t;
 	printf("Time Elapsed | %f sec (clock creation = 1e-6 sec)\n\n", t / CLOCKS_PER_SEC);
 
@@ -36,24 +36,33 @@ int main(int argc, char ** argv) {
 	for (i = 0; i < h; i++) {
 		map[i] = (double *)malloc(w * sizeof(double));
 	}
-	printf("Performing Simplex Noise Map Generation (%4.0f x %4.0f)\n", w, h);
+	printf("Performing Simplex Noise Map Generation | (%g x %g) Map\n", w, h);
 	t = clock();
 	for (i = 0; i < h; i++) {
 		for (j = 0; j < w; j++) {
 			point[0] = j / w - 0.5;
 			point[1] = i / h - 0.5;
-			map[i][j] = loadgen->simplexnoise(point);
+			map[i][j] = loadgen->noise(point);
 		}
 	}
 	t = clock() - t;
 	printf("Time Elapsed | %f sec (clock creation = 1e-6 sec)\n\n", t / CLOCKS_PER_SEC);
 
-	printf("Time Spent In Map Generation Non-Simplex\n");
+	unsigned octaves = 4;
+	double * freq = (double *)malloc(octaves * sizeof(double));
+	freq[0] = 1.0;
+	freq[1] = 0.5;
+	freq[2] = 0.25;
+	freq[3] = 0.125;
+	double e = 1;
+
+	printf("Performing Octaved Simplex Noise Map Generation | 4 Octaves | (%g x %g) Map\n", w, h);
 	t = clock();
 	for (i = 0; i < h; i++) {
 		for (j = 0; j < w; j++) {
 			point[0] = j / w - 0.5;
 			point[1] = i / h - 0.5;
+			map[i][j] = loadgen->octavednoise(point, octaves, freq, e);
 		}
 	}
 	t = clock() - t;
